@@ -13,18 +13,17 @@
 
         <div class="game__screen" data-game-screen>
             <p class="game__score">
-                Score: <span data-score>0</span>
+                Score: <span data-score>0</span> | High Score: <span data-high-score>0</span>
             </p>
 
             <div class="game__player" data-player aria-label="Player"></div>
             <div class="game__obstacles" data-obstacles aria-hidden="true"></div>
 
-            <p class="game__message" data-message aria-live="polite">
-                Press Start Game to play
-            </p>
+            <p class="game__message" data-message aria-live="polite">Press Start Game to play</p>
         </div>
 
         <button type="button" data-start-button>Start Game</button>
+        <p class="game__instructions">Press <strong>Spacebar</strong> or <strong>Up Arrow</strong> to jump</p>
     </main>
 </body>
 </html>

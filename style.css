@@ -1,0 +1,212 @@
+/* ==========================================================================
+   JUMPING GAME STYLES - MODERN AESTHETIC (CAT CHARACTER)
+   ========================================================================== */
+
+/* 1. GLOBAL VARIABLES (EASY TO CUSTOMIZE) */
+:root {
+  /* Main colors */
+  --bg-color: #f0f4f8;            /* Page background */
+  --card-bg: #ffffff;             /* Game card container background */
+  --sky-color: #e2f1ff;           /* Game screen area background (sky) */
+  --ground-color: #4a5568;        /* Ground border color */
+  --player-color: #ed8936;        /* Player character color (Ginger Cat Orange) */
+  --obstacle-color: #e53e3e;      /* Obstacle color (Red) */
+  --text-color: #2d3748;          /* Main text color */
+  --accent-color: #319795;        /* Button background color (Teal) */
+  --accent-hover: #2c7a7b;        /* Button background color on hover */
+  
+  /* Typography & Borders */
+  --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --border-radius: 12px;
+}
+
+/* 2. RESET AND GENERAL PAGE STYLES */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* 3. MAIN GAME CONTAINER */
+.game {
+  background-color: var(--card-bg);
+  padding: 30px;
+  border-radius: var(--border-radius);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  width: 100%;
+  max-width: 660px;
+}
+
+.game h1 {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  color: var(--text-color);
+}
+
+/* 4. GAME SCREEN / STAGE */
+.game__screen {
+  position: relative;             /* Positions player and obstacles relative to this container */
+  width: 100%;
+  height: 250px;
+  background: linear-gradient(to bottom, #edf2f7, var(--sky-color));
+  border-bottom: 4px solid var(--ground-color);
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+  overflow: hidden;               /* Clips elements that move outside the screen boundaries */
+  margin-bottom: 20px;
+}
+
+/* 5. SCORE DISPLAY & HIGH SCORE */
+.game__score {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 0.95rem;
+  font-weight: bold;
+  background-color: rgba(255, 255, 255, 0.85);
+  padding: 6px 14px;
+  border-radius: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  z-index: 10;
+}
+
+/* 6. ON-SCREEN MESSAGE (START / GAME OVER) */
+.game__message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-color);
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 12px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+/* Hide message container background/padding when empty */
+.game__message:empty {
+  display: none;
+}
+
+/* 7. PLAYER CHARACTER (CUTE CAT DESIGN) */
+.game__player {
+  position: absolute;
+  bottom: 0;                      /* Positioned on top of the ground */
+  left: 40px;                     /* Fixed horizontal position */
+  width: 40px;
+  height: 38px;
+  background-color: var(--player-color);
+  /* Cute cat eyes created with radial gradients */
+  background-image: 
+    radial-gradient(circle at 12px 14px, #1a202c 2px, transparent 3px),
+    radial-gradient(circle at 28px 14px, #1a202c 2px, transparent 3px);
+  border-radius: 14px 14px 8px 8px; /* Curved head/body shape for cat */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transition: transform 0.05s ease;
+}
+
+/* Left cat ear */
+.game__player::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 4px;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 10px solid var(--player-color);
+}
+
+/* Right cat ear */
+.game__player::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  right: 4px;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 10px solid var(--player-color);
+}
+
+/* 8. OBSTACLES CONTAINER AND DYNAMIC OBSTACLES */
+.game__obstacles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Styling for obstacles generated dynamically via JavaScript */
+.game__obstacle {
+  position: absolute;
+  bottom: 0;
+  width: 25px;
+  height: 45px;
+  background-color: var(--obstacle-color);
+  border-radius: 6px 6px 0 0;     /* Rounded top corners */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* 9. START / RESTART BUTTON */
+button[data-start-button] {
+  font-family: var(--font-family);
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  background-color: var(--accent-color);
+  border: none;
+  padding: 12px 28px;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(49, 151, 149, 0.3);
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+button[data-start-button]:hover {
+  background-color: var(--accent-hover);
+  transform: translateY(-2px);
+}
+
+button[data-start-button]:active {
+  transform: translateY(0);
+}
+
+button[data-start-button]:disabled {
+  background-color: #cbd5e0;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* 10. GAME INSTRUCTIONS HINT */
+.game__instructions {
+  margin-top: 18px;
+  font-size: 0.9rem;
+  color: #718096;
+}
+
+.game__instructions strong {
+  color: var(--text-color);
+  background-color: #edf2f7;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #cbd5e0;
+}
