@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jumping Game</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <main class="game">
+        <h1>Jumping Game</h1>
+
+        <div class="game__screen" data-game-screen>
+            <p class="game__score">
+                Score: <span data-score>0</span>
+            </p>
+
+            <div class="game__player" data-player aria-label="Player"></div>
+            <div class="game__obstacles" data-obstacles aria-hidden="true"></div>
+
+            <p class="game__message" data-message aria-live="polite">
+                Press Start Game to play
+            </p>
+        </div>
+
+        <button type="button" data-start-button>Start Game</button>
+    </main>
+</body>
+</html>
