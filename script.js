@@ -133,9 +133,24 @@ function updateObstacles(deltaTime) {
     });
 }
 
+function isColliding(a, b) {
+    // Simple & short collision check between 2 bounding rects
+    return (
+        a.x < b.x + b.width &&
+        a.x + a.width > b.x && 
+        a.y < b.y + b.height && 
+        a.y + a.height > b.y
+    );
+}
+
 function checkCollisions() {
     // Collision detection
-    return false;
+    const playerBox = player.getBoundingClientRect();
+    const obstacles = OBSTACLES.instances.filter(obj => obj.active);
+
+    const hasCollided = obstacles.some(obs => isColliding(playerBox, obs.element.getBoundingClientRect()));
+
+    return hasCollided;
 }
 
 function updateScore(deltaTime) {
