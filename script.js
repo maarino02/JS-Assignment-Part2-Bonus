@@ -8,26 +8,33 @@ const message = document.querySelector("[data-message]");
 const startButton = document.querySelector("[data-start-button]");
 
 // Data
-const GRAVITY = 300;
+const GRAVITY = 1500;
+const COLLISION_TOLERANCE = 2;  // A little leeway to stop visual misses being calculated as hits.
+const MAX_SCALE = 3.0;
+const DIFFICULTY_STEP = 5;
 const PLAYER_STATE = {
     xPosition: 40,
     yPosition: 0,
     yVelocity: 0,
     jumping: false,
-    jumpVelocity: 250,
+    jumpVelocity: 600,
 };
 const OBSTACLES = {
+    baseHeight: 45,
+    heightVariance: 30,
     borderSpacing: 40,
     inactivePosition: -40,
     maxSpawns: 6,
     spawnRate: 2000,
     lastSpawnTime: 0,
     speed: 200,
+    baseSpeed: 200,
     instances: [],
 };
 const AUDIO = new AudioContext();
 
 // Variable data
+let currentScale = 1.0;
 let gameRunning = false;
 let lastFrameTime = 0;
 let score = 0;
@@ -35,6 +42,15 @@ let highScore = 0;
 let scoreUpdated = true;
 let gameWidth = getGameWidth();
 
+
+// RANDOMISATION
+function randomNumber(limit) {
+    return Math.floor(Math.random() * limit);
+}
+
+function randomColour() {
+    return `rgb(${randomNumber(256)} ${randomNumber(256)} ${randomNumber(256)})`;
+}
 
 // MEASURES
 function getGameWidth() {
@@ -125,6 +141,7 @@ function playHighScoreSound() {
 
 // SETUP
 function setupObstacles() {
+    OBSTACLES.speed = OBSTACLES.baseSpeed;
     OBSTACLES.instances = [];
 
     for (let i=0; i < OBSTACLES.maxSpawns; i++) {
@@ -146,14 +163,18 @@ function startGame() {
     if (gameRunning) {
         return;
     }
+    
     gameRunning = true;
     lastFrameTime = performance.now();
     score = 0;
+    currentScale = 1.0;
+    
     obstacleContainer.replaceChildren();
+    setupObstacles();
+
     scoreDisplay.textContent = score;
     message.textContent = "";
     startButton.disabled = true;
-    setupObstacles();
     requestAnimationFrame(gameLoop);
 }
 
@@ -165,6 +186,7 @@ function gameLoop(currentTime) {
 
     const deltaTime = (currentTime - lastFrameTime) / 1000;
     lastFrameTime = currentTime;
+    updateDifficulty();
     updatePlayer(deltaTime);
     updateObstacles(deltaTime);
     if (checkCollisions()) {
@@ -202,8 +224,12 @@ function spawnObstacle() {
     const nextObstacle = OBSTACLES.instances.filter(obj => !obj.active)[0];
 
     if (nextObstacle) {
+        const randomHeight = OBSTACLES.baseHeight + (randomNumber(OBSTACLES.heightVariance * 2) - OBSTACLES.heightVariance);
+
         nextObstacle.xPosition = gameWidth + OBSTACLES.borderSpacing;
         nextObstacle.element.style.left = `${nextObstacle.xPosition}px`;
+        nextObstacle.element.style.backgroundColor = randomColour();
+        nextObstacle.element.style.height = `${randomHeight}px`;
         nextObstacle.active = true;
         nextObstacle.scored = false;
         obstacleContainer.appendChild(nextObstacle.element);
@@ -242,14 +268,37 @@ function updateObstacles(deltaTime) {
     });
 }
 
+function updateDifficulty() {
+    const difficultyLevel = Math.floor(score / DIFFICULTY_STEP);
+    const newScale = 1 + (difficultyLevel / 10);
+
+    if (currentScale < newScale && newScale <= MAX_SCALE) {
+        currentScale = newScale;
+
+        OBSTACLES.speed *= currentScale;
+    }
+}
+
 // COLLISION
 function isColliding(a, b) {
     // Simple & short collision check between 2 bounding rects
+    const t = COLLISION_TOLERANCE / 2;
+
+    const aLeft = a.x + t;
+    const aRight = a.x + a.width - t;
+    const aTop = a.y + t;
+    const aBottom = a.y + a.height - t;
+
+    const bLeft = b.x + t;
+    const bRight = b.x + b.width - t;
+    const bTop = b.y + t;
+    const bBottom = b.y + b.height - t;
+
     return (
-        a.x < b.x + b.width &&
-        a.x + a.width > b.x && 
-        a.y < b.y + b.height && 
-        a.y + a.height > b.y
+        aLeft < bRight &&
+        aRight > bLeft &&
+        aTop < bBottom &&
+        aBottom > bTop
     );
 }
 
