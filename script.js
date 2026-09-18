@@ -1,15 +1,13 @@
+// Elements
 const gameScreen = document.querySelector("[data-game-screen]");
 const player = document.querySelector("[data-player]");
 const obstacleContainer = document.querySelector("[data-obstacles]");
 const scoreDisplay = document.querySelector("[data-score]");
+const highScoreDisplay = document.querySelector("[data-high-score]");
 const message = document.querySelector("[data-message]");
 const startButton = document.querySelector("[data-start-button]");
-let gameRunning = false;
-let lastFrameTime = 0;
-let score = 0;
-let scoreUpdated = true;
-let gameWidth = getGameWidth();
 
+// Data
 const GRAVITY = 300;
 const PLAYER_STATE = {
     xPosition: 40,
@@ -28,6 +26,14 @@ const OBSTACLES = {
     instances: [],
 };
 const AUDIO = new AudioContext();
+
+// Variable data
+let gameRunning = false;
+let lastFrameTime = 0;
+let score = 0;
+let highScore = 0;
+let scoreUpdated = true;
+let gameWidth = getGameWidth();
 
 
 // MEASURES
@@ -49,7 +55,7 @@ function playSound(components) {
     components.gain.connect(AUDIO.destination);
 
     components.osc.start(components.now);
-    components.osc.stop(components.now + 0.12);
+    components.osc.stop(components.now + components.duration);
 }
 
 function playJumpSound() {
@@ -62,6 +68,8 @@ function playJumpSound() {
 
     components.gain.gain.setValueAtTime(0.15, components.now);
     components.gain.gain.exponentialRampToValueAtTime(0.001, components.now + 0.12);
+
+    components.duration = 0.12;
 
     playSound(components);
 }
@@ -76,6 +84,8 @@ function playDeathSound() {
 
     components.gain.gain.setValueAtTime(0.2, components.now);
     components.gain.gain.exponentialRampToValueAtTime(0.001, components.now + 0.4);
+    
+    components.duration = 0.4;
 
     playSound(components);
 }
@@ -90,12 +100,33 @@ function playScoreSound() {
     components.gain.gain.setValueAtTime(0.15, components.now);
     components.gain.gain.exponentialRampToValueAtTime(0.001, components.now + 0.12);
 
+    components.duration = 0.12;
+
     playSound(components);
 
 }
 
+function playHighScoreSound() {
+    const components = createAudioComponents();
+
+    components.osc.type = "square";
+    components.osc.frequency.setValueAtTime(500, components.now);
+    components.osc.frequency.setValueAtTime(700, components.now + 0.10);
+    components.osc.frequency.setValueAtTime(1000, components.now + 0.20);
+
+    components.gain.gain.setValueAtTime(0.15, components.now);
+    components.gain.gain.setValueAtTime(0.15, components.now + 0.20);
+    components.gain.gain.exponentialRampToValueAtTime(0.001, components.now + 0.35);
+
+    components.duration = 0.35;
+
+    playSound(components);
+}
+
 // SETUP
 function setupObstacles() {
+    OBSTACLES.instances = [];
+
     for (let i=0; i < OBSTACLES.maxSpawns; i++) {
         const obstacle_element = document.createElement('div');
         obstacle_element.classList.add("game__obstacle");
@@ -140,7 +171,7 @@ function gameLoop(currentTime) {
         endGame();
         return;
     }
-    updateScore(deltaTime);
+    updateScore();
     requestAnimationFrame(gameLoop);
 }
 
@@ -198,14 +229,14 @@ function updateObstacles(deltaTime) {
             obstacle.element.style.left = `${obstacle.xPosition}px`;
             let obstacleWidth = obstacle.element.getBoundingClientRect().width;
     
+            if (obstacle.xPosition < OBSTACLES.inactivePosition) {
+                obstacle.active = false;
+            }
+
             // Obstacle safely passed
             if (obstacle.xPosition < PLAYER_STATE.xPosition - obstacleWidth && !obstacle.scored) {
                 incrementScore();
                 obstacle.scored = true;
-            }
-
-            if (obstacle.xPosition < OBSTACLES.inactivePosition) {
-                obstacle.active = false;
             }
         }
     });
@@ -239,7 +270,7 @@ function incrementScore() {
     playScoreSound();
 }
 
-function updateScore(deltaTime) {
+function updateScore() {
     // Update UI
     if (scoreUpdated) {
         scoreDisplay.textContent = score.toLocaleString();
@@ -249,11 +280,19 @@ function updateScore(deltaTime) {
 
 // END LOOP
 function endGame() {
-    playDeathSound();
     gameRunning = false;
-    message.textContent = `Game over! Score: ${Math.floor(score)}`;
     startButton.textContent = "Restart Game";
     startButton.disabled = false;
+    
+    if (score > highScore) {
+        highScore = score;
+        highScoreDisplay.textContent = highScore.toLocaleString();
+        message.textContent = `New high score! ${Math.floor(score)}`;
+        playHighScoreSound();
+    } else {
+        message.textContent = `Game over! Score: ${Math.floor(score)}`;
+        playDeathSound();
+    }
 }
 
 // EVENTS
