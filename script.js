@@ -7,9 +7,12 @@ const startButton = document.querySelector("[data-start-button]");
 let gameRunning = false;
 let lastFrameTime = 0;
 let score = 0;
+let scoreUpdated = true;
+let gameWidth = getGameWidth();
 
 const GRAVITY = 300;
 const PLAYER_STATE = {
+    xPosition: 40,
     yPosition: 0,
     yVelocity: 0,
     jumping: false,
@@ -17,7 +20,7 @@ const PLAYER_STATE = {
 };
 const OBSTACLES = {
     borderSpacing: 40,
-    inactivePosition: 0,
+    inactivePosition: -40,
     maxSpawns: 6,
     spawnRate: 2000,
     lastSpawnTime: 0,
@@ -25,6 +28,12 @@ const OBSTACLES = {
     instances: [],
 };
 const AUDIO = new AudioContext();
+
+
+// MEASURES
+function getGameWidth() {
+    return gameScreen.getBoundingClientRect().width;
+}
 
 // AUDIO
 function createAudioComponents() {
@@ -71,18 +80,31 @@ function playDeathSound() {
     playSound(components);
 }
 
+function playScoreSound() {
+    const components = createAudioComponents();
+
+    components.osc.type = "square";
+    components.osc.frequency.setValueAtTime(500, components.now);
+    components.osc.frequency.exponentialRampToValueAtTime(900, components.now + 0.12);
+
+    components.gain.gain.setValueAtTime(0.15, components.now);
+    components.gain.gain.exponentialRampToValueAtTime(0.001, components.now + 0.12);
+
+    playSound(components);
+
+}
+
 // SETUP
 function setupObstacles() {
-    OBSTACLES.inactivePosition = obstacleContainer.clientWidth + OBSTACLES.borderSpacing;
-
     for (let i=0; i < OBSTACLES.maxSpawns; i++) {
         const obstacle_element = document.createElement('div');
         obstacle_element.classList.add("game__obstacle");
         
         const new_instance = {
-            xPosition: 0,  // r to l
+            xPosition: 0,
             element: obstacle_element,
             active: false,
+            scored: false,
         };
 
         OBSTACLES.instances.push(new_instance);
@@ -149,9 +171,10 @@ function spawnObstacle() {
     const nextObstacle = OBSTACLES.instances.filter(obj => !obj.active)[0];
 
     if (nextObstacle) {
-        nextObstacle.xPosition = -OBSTACLES.borderSpacing;
-        nextObstacle.element.style.right = `-${OBSTACLES.borderSpacing}px`;
+        nextObstacle.xPosition = gameWidth + OBSTACLES.borderSpacing;
+        nextObstacle.element.style.left = `${nextObstacle.xPosition}px`;
         nextObstacle.active = true;
+        nextObstacle.scored = false;
         obstacleContainer.appendChild(nextObstacle.element);
     }
 }
@@ -171,10 +194,17 @@ function updateObstacles(deltaTime) {
     OBSTACLES.instances.forEach((obstacle) => {
         // Set positions
         if (obstacle.active) {
-            obstacle.xPosition += OBSTACLES.speed * deltaTime;
-            obstacle.element.style.right = `${obstacle.xPosition}px`;
+            obstacle.xPosition -= OBSTACLES.speed * deltaTime;
+            obstacle.element.style.left = `${obstacle.xPosition}px`;
+            let obstacleWidth = obstacle.element.getBoundingClientRect().width;
     
-            if (obstacle.xPosition >= OBSTACLES.inactivePosition) {
+            // Obstacle safely passed
+            if (obstacle.xPosition < PLAYER_STATE.xPosition - obstacleWidth && !obstacle.scored) {
+                incrementScore();
+                obstacle.scored = true;
+            }
+
+            if (obstacle.xPosition < OBSTACLES.inactivePosition) {
                 obstacle.active = false;
             }
         }
@@ -203,8 +233,18 @@ function checkCollisions() {
 }
 
 // SCORE
+function incrementScore() {
+    score += 1;
+    scoreUpdated = true;
+    playScoreSound();
+}
+
 function updateScore(deltaTime) {
-    // Score calculation and display update
+    // Update UI
+    if (scoreUpdated) {
+        scoreDisplay.textContent = score.toLocaleString();
+        scoreUpdated = false;
+    }
 }
 
 // END LOOP
@@ -225,4 +265,7 @@ document.addEventListener("keydown", (event) => {
             jump();
         }
     }
+});
+window.addEventListener("resize", () => {
+    gameWidth = getGameWidth();
 });
