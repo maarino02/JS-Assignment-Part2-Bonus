@@ -357,3 +357,19 @@ document.addEventListener("keydown", (event) => {
 window.addEventListener("resize", () => {
     gameWidth = getGameWidth();
 });
+
+document.addEventListener("keydown", (event) => {
+    if (event.code === "Space" || event.code === "ArrowUp") {
+        event.preventDefault();
+
+        if (event.repeat) {
+            return;
+        }
+
+        if (gameRunning) {
+            jump();
+        } else if (event.code === "Space") {
+            startGame();
+        }
+    }
+});
